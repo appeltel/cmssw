@@ -31,6 +31,9 @@ MultiTrackSelector::MultiTrackSelector( const edm::ParameterSet & cfg ) :
   max_d0_.reserve(trkSelectors.size());
   max_z0_.reserve(trkSelectors.size());
   nSigmaZ_.reserve(trkSelectors.size());
+  applyHIonCuts_.reserve(trkSelectors.size());
+  hIon_pTMinCut_.reserve(trkSelectors.size());
+  hIon_pTMaxCut_.reserve(trkSelectors.size());
   min_layers_.reserve(trkSelectors.size());
   min_3Dlayers_.reserve(trkSelectors.size());
   max_lostLayers_.reserve(trkSelectors.size());
@@ -62,6 +65,11 @@ MultiTrackSelector::MultiTrackSelector( const edm::ParameterSet & cfg ) :
     max_d0_.push_back(trkSelectors[i].getParameter<double>("max_d0"));
     max_z0_.push_back(trkSelectors[i].getParameter<double>("max_z0"));
     nSigmaZ_.push_back(trkSelectors[i].getParameter<double>("nSigmaZ"));
+    // Boolean indicating if HIon related cuts are to be applied
+    applyHIonCuts_.push_back(trkSelectors[i].getParameter<bool>("applyHIonCuts"));
+    // parameters for HIon pT dependent chi2 cuts
+    hIon_pTMinCut_.push_back(trkSelectors[i].getParameter< std::vector<double> >("hIon_pTMinCut"));
+    hIon_pTMaxCut_.push_back(trkSelectors[i].getParameter< std::vector<double> >("hIon_pTMaxCut"));
     // Cuts on numbers of layers with hits/3D hits/lost hits.
     min_layers_.push_back(trkSelectors[i].getParameter<uint32_t>("minNumberLayers") );
     min_3Dlayers_.push_back(trkSelectors[i].getParameter<uint32_t>("minNumber3DLayers") );
@@ -265,6 +273,20 @@ void MultiTrackSelector::produce( edm::Event& evt, const edm::EventSetup& es )
   if(relpterr > max_relpterr_[tsNum]) return false;
   if(nhits < min_nhits_[tsNum]) return false;
 
+  // HIon pT dependent cuts
+  if( applyHIonCuts_[tsNum] )
+  {
+    // hard cut at absolute min/max pt
+    if( pt < hIon_pTMinCut_[tsNum][0] ) return false;
+    if( pt > hIon_pTMaxCut_[tsNum][0] ) return false;
+    // tapering cuts with chi2n_no1Dmod 
+    double pTMaxCutPos = ( hIon_pTMaxCut_[tsNum][0] - pt ) / ( hIon_pTMaxCut_[tsNum][0] - hIon_pTMaxCut_[tsNum][1] );
+    double pTMinCutPos = ( pt - hIon_pTMinCut_[tsNum][0] ) / ( hIon_pTMinCut_[tsNum][1] - hIon_pTMaxCut_[tsNum][0] );
+    if(  pt > hIon_pTMaxCut_[tsNum][1] && chi2n_no1Dmod*pTMaxCutPos > hIon_pTMaxCut_[tsNum][2]*nlayers ) 
+      return false;
+    if(  pt < hIon_pTMinCut_[tsNum][1] && chi2n_no1Dmod*pTMinCutPos > hIon_pTMinCut_[tsNum][2]*nlayers ) 
+      return false;
+  }
 
   //other track parameters
   double d0 = -tk.dxy(vertexBeamSpot.position()), d0E =  tk.d0Error(),
