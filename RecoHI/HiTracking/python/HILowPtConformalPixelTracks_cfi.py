@@ -7,6 +7,8 @@ from RecoHI.HiTracking.HITrackingRegionProducer_cfi import *
 
 from RecoPixelVertexing.PixelTrackFitting.PixelFitterByConformalMappingAndLine_cfi import *
 
+from RecoHI.HiTracking.hiMultiTrackSelector_cfi import *
+
 hiConformalPixelTracks = cms.EDProducer("PixelTrackProducer",
                                         
                                         #passLabel  = cms.string('Pixel triplet low-pt tracks with vertex constraint'),
@@ -49,3 +51,46 @@ hiConformalPixelTracks.OrderedHitsFactoryPSet.GeneratorPSet.maxElement = 5000000
 
 hiConformalPixelTracks.FitterPSet.fixImpactParameter = cms.double(0.0)
 hiConformalPixelTracks.FitterPSet.TTRHBuilder = cms.string('TTRHBuilderWithoutAngle4PixelTriplets')
+
+# Selector for quality pixel tracks with tapering high-pT cut
+
+#loose
+hiPixelOnlyStepLooseMTS = hiLooseMTS.clone(
+    name= cms.string('hiPixelOnlyTrkLoose'),
+    chi2n_no1Dmod_par = cms.double(25.0),
+    d0_par2 = cms.vdouble(9999.0, 0.0),              # d0E from tk.d0Error
+    dz_par2 = cms.vdouble(14.0, 0.0), 
+    max_relpterr = cms.double(9999.),
+    min_nhits = cms.uint32(0),
+    applyHIonCuts = cms.bool(True),
+    hIon_pTMaxCut = cms.vdouble(5,10,25)
+)
+
+hiPixelOnlyStepTightMTS=hiPixelOnlyStepLooseMTS.clone(
+    preFilterName='hiPixelOnlyTrkLoose',
+    chi2n_no1Dmod_par = cms.double(18.0),
+    dz_par2 = cms.vdouble(12.0, 0.0),
+    hIon_pTMaxCut = cms.vdouble(2,4,18),
+    name= cms.string('hiPixelOnlyTrkTight'),
+    qualityBit = cms.string('tight'),
+    keepAllTracks= cms.bool(True)
+    )
+
+hiPixelOnlyStepHighpurityMTS= hiPixelOnlyStepTightMTS.clone(
+    name= cms.string('hiPixelOnlyTrkHighPurity'),
+    preFilterName='hiPixelOnlyTrkTight',
+    chi2n_no1Dmod_par = cms.double(12.),    
+    dz_par2 = cms.vdouble(10.0, 0.0),
+    hIon_pTMaxCut = cms.vdouble(1.5,2.5,12),
+    qualityBit = cms.string('highPurity') ## set to '' or comment out if you dont want to set the bit
+    )
+
+hiPixelOnlyStepSelector = RecoHI.HiTracking.hiMultiTrackSelector_cfi.hiMultiTrackSelector.clone(
+    src='hiConformalPixelTracks',
+    trackSelectors= cms.VPSet(
+        hiPixelOnlyStepLooseMTS,
+        hiPixelOnlyStepTightMTS,
+        hiPixelOnlyStepHighpurityMTS
+    ) #end of vpset
+    ) #end of clone
+
