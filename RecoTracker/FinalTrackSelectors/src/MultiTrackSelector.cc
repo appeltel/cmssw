@@ -281,10 +281,12 @@ void MultiTrackSelector::produce( edm::Event& evt, const edm::EventSetup& es )
     if( pt > hIon_pTMaxCut_[tsNum][0] ) return false;
     // tapering cuts with chi2n_no1Dmod 
     double pTMaxCutPos = ( hIon_pTMaxCut_[tsNum][0] - pt ) / ( hIon_pTMaxCut_[tsNum][0] - hIon_pTMaxCut_[tsNum][1] );
-    double pTMinCutPos = ( pt - hIon_pTMinCut_[tsNum][0] ) / ( hIon_pTMinCut_[tsNum][1] - hIon_pTMaxCut_[tsNum][0] );
-    if(  pt > hIon_pTMaxCut_[tsNum][1] && chi2n_no1Dmod > hIon_pTMaxCut_[tsNum][2]*nlayers*pTMaxCutPos ) 
+    double pTMinCutPos = ( pt - hIon_pTMinCut_[tsNum][0] ) / ( hIon_pTMinCut_[tsNum][1] - hIon_pTMinCut_[tsNum][0] );
+    if(  pt > hIon_pTMaxCut_[tsNum][1] && 
+         chi2n_no1Dmod > hIon_pTMaxCut_[tsNum][2]*nlayers*pow(pTMaxCutPos,hIon_pTMaxCut_[tsNum][3]) ) 
       return false;
-    if(  pt < hIon_pTMinCut_[tsNum][1] && chi2n_no1Dmod > hIon_pTMinCut_[tsNum][2]*nlayers*pTMinCutPos ) 
+    if(  pt < hIon_pTMinCut_[tsNum][1] && 
+         chi2n_no1Dmod > hIon_pTMinCut_[tsNum][2]*nlayers*pow(pTMinCutPos,hIon_pTMinCut_[tsNum][3]) ) 
       return false;
   }
 

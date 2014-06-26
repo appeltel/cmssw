@@ -33,8 +33,8 @@ looseMTS = cms.PSet(
     applyHIonCuts = cms.bool(False),
     
     #  parameters for HIon pT dependent chi2 cut
-    hIon_pTMinCut = cms.vdouble(0.0,0.0001,9999),
-    hIon_pTMaxCut = cms.vdouble(9998,9999,9999),
+    hIon_pTMinCut = cms.vdouble(0.0,0.0001,9999,1.0),
+    hIon_pTMaxCut = cms.vdouble(9999,9998,9999,1.0),
 
     # Cuts on numbers of layers with hits/3D hits/lost hits. 
     minNumberLayers = cms.uint32(0),
