@@ -82,7 +82,7 @@ hiPixelOnlyStepHighpurityMTS= hiPixelOnlyStepTightMTS.clone(
     preFilterName='hiPixelOnlyTrkTight',
     chi2n_no1Dmod_par = cms.double(12.),    
     dz_par2 = cms.vdouble(10.0, 0.0),
-    hIon_pTMaxCut = cms.vdouble(2.5,1.5,12,2.5),
+    hIon_pTMaxCut = cms.vdouble(2.4,1.6,12,2.5),
     qualityBit = cms.string('highPurity') ## set to '' or comment out if you dont want to set the bit
     )
 
@@ -104,9 +104,9 @@ hiHighPtStepTruncMTS = hiLooseMTS.clone(
     d0_par2 = cms.vdouble(9999.0, 0.0),              # d0E from tk.d0Error
     dz_par2 = cms.vdouble(9999.0, 0.0),
     max_relpterr = cms.double(9999.),
-    min_nhits = cms.uint32(0),
+    min_nhits = cms.uint32(12),
     applyHIonCuts = cms.bool(True),
-    hIon_pTMinCut = cms.vdouble(1.5,2.5,0.15,2.0),
+    hIon_pTMinCut = cms.vdouble(1.0,1.8,0.15,2.5),
     qualityBit = cms.string('')
 )
 
@@ -120,7 +120,7 @@ hiHighPtStepSelector = hiMultiTrackSelector.clone(
 
 # make final collection, unmerged for now
 
-hiLowPtPixelTracks = trackListMerger.clone(
+hiGeneralAndPixelTracks = trackListMerger.clone(
     TrackProducers = cms.VInputTag(cms.InputTag('hiConformalPixelTracks'),
                           cms.InputTag('hiGeneralTracks')
                      ),
