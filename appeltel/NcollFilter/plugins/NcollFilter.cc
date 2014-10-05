@@ -5,7 +5,7 @@
 // 
 /**\class NcollFilter NcollFilter.cc appeltel/NcollFilter/plugins/NcollFilter.cc
 
- Description: [one line class summary]
+ Description: Filters MC HI Events based on Ncoll
 
  Implementation:
      [Notes on implementation]
@@ -19,6 +19,7 @@
 
 // system include files
 #include <memory>
+#include <iostream>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -28,6 +29,9 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+#include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
+#include "HepMC/HeavyIon.h"
 
 //
 // class declaration
@@ -51,6 +55,9 @@ class NcollFilter : public edm::EDFilter {
       //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
       // ----------member data ---------------------------
+      std::vector<std::string> hepmcSrc_;
+      int ncollmax_;
+
 };
 
 //
@@ -64,9 +71,10 @@ class NcollFilter : public edm::EDFilter {
 //
 // constructors and destructor
 //
-NcollFilter::NcollFilter(const edm::ParameterSet& iConfig)
+NcollFilter::NcollFilter(const edm::ParameterSet& iConfig):
+hepmcSrc_(iConfig.getParameter<std::vector<std::string> >("generators")),
+ncollmax_(iConfig.getParameter<int>("ncollmax"))
 {
-   //now do what ever initialization is needed
 
 }
 
@@ -74,9 +82,6 @@ NcollFilter::NcollFilter(const edm::ParameterSet& iConfig)
 NcollFilter::~NcollFilter()
 {
  
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
-
 }
 
 
@@ -89,15 +94,18 @@ bool
 NcollFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
-#ifdef THIS_IS_AN_EVENT_EXAMPLE
-   Handle<ExampleData> pIn;
-   iEvent.getByLabel("example",pIn);
-#endif
+   int ncoll = 0;
 
-#ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
-#endif
+   for(size_t ihep = 0; ihep < hepmcSrc_.size(); ++ihep)
+   {
+     edm::Handle<edm::HepMCProduct> hepmc;
+     iEvent.getByLabel(hepmcSrc_[ihep],hepmc);
+     const HepMC::HeavyIon* hi = hepmc->GetEvent()->heavy_ion();
+     ncoll += hi->Ncoll();
+   } 
+
+   std::cout << "Ncoll = " << ncoll << std::endl;
+
    return true;
 }
 
