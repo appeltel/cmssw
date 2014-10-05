@@ -30,6 +30,11 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "FWCore/Utilities/interface/Exception.h"
+#include "FWCore/Utilities/interface/RandomNumberGenerator.h"
+#include "CLHEP/Random/RandomEngine.h"
+
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 #include "HepMC/HeavyIon.h"
 
@@ -75,6 +80,15 @@ NcollFilter::NcollFilter(const edm::ParameterSet& iConfig):
 hepmcSrc_(iConfig.getParameter<std::vector<std::string> >("generators")),
 ncollmax_(iConfig.getParameter<int>("ncollmax"))
 {
+  edm::Service<edm::RandomNumberGenerator> rng;
+  if(!rng.isAvailable()) {
+    throw cms::Exception("Configuration")
+      << "NcollFilter requires the RandomNumberGeneratorService,\n"
+         "which is not present in the configuration file. You must add\n"
+         "the service in the configuration file or remove the modules that\n"
+         "require it.\n";
+  }
+
 
 }
 
@@ -96,6 +110,10 @@ NcollFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
    using namespace edm;
    int ncoll = 0;
 
+   edm::Service<edm::RandomNumberGenerator> rng;
+   CLHEP::HepRandomEngine& engine = rng->getEngine(iEvent.streamID());
+   double threshold = engine.flat() * (double)ncollmax_;
+
    for(size_t ihep = 0; ihep < hepmcSrc_.size(); ++ihep)
    {
      edm::Handle<edm::HepMCProduct> hepmc;
@@ -104,9 +122,9 @@ NcollFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
      ncoll += hi->Ncoll();
    } 
 
-   std::cout << "Ncoll = " << ncoll << std::endl;
+   //std::cout << "Ncoll = " << ncoll << " threshold = " << threshold << std::endl;
 
-   return true;
+   return ncoll > threshold ? true : false ;
 }
 
 // ------------ method called once each job just before starting event loop  ------------
