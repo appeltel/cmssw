@@ -21,4 +21,6 @@
 <class name="std::vector<reco::VoronoiBackground>" />
 <class name="edm::Wrapper<std::vector<reco::VoronoiBackground> >" />
 <class name="edm::Wrapper<pat::HeavyIon >" />
+<class name="reco::ClusterCompatibility" />
+<class name="edm::Wrapper<reco::ClusterCompatibility>"/>
 </lcgdict>
